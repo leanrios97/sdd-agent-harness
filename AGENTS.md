@@ -4,13 +4,18 @@ Reglas que todo agente sigue en este repositorio, sin importar la herramienta (C
 
 ## Flujo
 
-Todo cambio sigue tres pasos. Al terminar cada uno, el agente se detiene y espera aprobación explícita antes de continuar.
+Todo cambio sigue cuatro pasos. Al terminar cada uno, el agente se detiene y espera aprobación explícita antes de continuar.
 
-1. **`/spec`** — Escribir la spec del cambio en `docs/specs/` a partir de `docs/templates/spec.md`.
-2. **`/implementar`** — El agente desarrollador implementa la spec aprobada con TDD estricto.
-3. **`/verificar`** — Comprobar cada criterio de aceptación con evidencia.
+1. **`/explorar`** — El agente explorador construye el mapa de impacto en `docs/exploraciones/` a partir de `docs/templates/exploracion.md`.
+2. **`/spec`** — Escribir la spec del cambio en `docs/specs/` a partir de `docs/templates/spec.md` y del mapa de impacto.
+3. **`/implementar`** — El agente desarrollador implementa la spec aprobada con TDD estricto.
+4. **`/verificar`** — Comprobar cada criterio de aceptación con evidencia.
 
 ## Reglas
+
+### Exploración
+- No se escribe una spec sin un mapa de impacto aprobado.
+- Cada categoría del mapa se completa siempre; si no hay hallazgos, se indica "revisado: ninguno".
 
 ### Specs
 - No se escribe código de producción sin una spec aprobada.

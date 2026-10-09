@@ -28,16 +28,19 @@ Cada versión tiene que poder usarse de punta a punta antes de pasar a la siguie
 
 ### Objetivo
 
-Un flujo SDD que se pueda usar desde el primer día, rápido y sin ceremonias: el agente principal guía el flujo, un agente desarrollador implementa con buenas prácticas y la persona aprueba entre cada paso.
+Un flujo SDD que se pueda usar desde el primer día, rápido y sin ceremonias: el agente principal guía el flujo, un agente explorador mapea todo lo que el cambio afecta, un agente desarrollador implementa con buenas prácticas y la persona aprueba entre cada paso.
 
 ### Flujo
 
 ```
-/spec ──► aprobación ──► /implementar ──► aprobación ──► /verificar
-  │                          │                               │
-crea la spec            agente desarrollador:         comprueba cada
-en docs/specs/          TDD estricto +                criterio de
-                        estándares de desarrollo      aceptación
+/explorar ──► /spec ──► /implementar ──► /verificar
+    │           │             │              │
+ agente      crea la     agente          comprueba cada
+ explorador: spec a      desarrollador:  criterio de
+ mapa de     partir del  TDD estricto +  aceptación
+ impacto     mapa        estándares
+
+        (aprobación de la persona entre cada paso)
 ```
 
 ### Entregables
@@ -49,27 +52,34 @@ sdd-agent-harness/
 ├── opencode.json               # "instructions": ["docs/estandares/desarrollo.md"]
 ├── .claude/
 │   ├── skills/                 # Lógica de cada fase, compartida por ambas herramientas
+│   │   ├── sdd-explorar/SKILL.md
 │   │   ├── sdd-spec/SKILL.md
 │   │   ├── sdd-implementar/SKILL.md
 │   │   └── sdd-verificar/SKILL.md
 │   ├── agents/
+│   │   ├── explorador.md       # Agente explorador, solo lectura (formato Claude Code)
 │   │   └── desarrollador.md    # Agente desarrollador (formato Claude Code)
 │   └── commands/               # Envoltorios finos que invocan cada skill
+│       ├── explorar.md         # context: fork + agent: explorador
 │       ├── spec.md
 │       ├── implementar.md      # context: fork + agent: desarrollador
 │       └── verificar.md
 ├── .opencode/
 │   ├── agents/
+│   │   ├── explorador.md       # Agente explorador, solo lectura (formato OpenCode, mode: subagent)
 │   │   └── desarrollador.md    # Agente desarrollador (formato OpenCode, mode: subagent)
 │   └── commands/               # Envoltorios finos que invocan cada skill
+│       ├── explorar.md         # agent: explorador + subtask: true
 │       ├── spec.md
 │       ├── implementar.md      # agent: desarrollador + subtask: true
 │       └── verificar.md
 └── docs/
     ├── estandares/
     │   └── desarrollo.md       # Buenas prácticas que aplica el agente desarrollador
+    ├── exploraciones/          # Un mapa de impacto por cambio
     ├── specs/                  # Una spec por archivo
     └── templates/
+        ├── exploracion.md      # Plantilla del mapa de impacto
         └── spec.md             # Plantilla de spec
 ```
 
@@ -82,6 +92,22 @@ Reglas mínimas que valen para los dos agentes:
 - Tocar solo los archivos declarados en la spec; si hace falta otro, frenar y avisar.
 - Detenerse al final de cada paso y esperar aprobación.
 - Conventional commits en español, sin atribución de IA.
+
+### Agente explorador
+
+Es quien ejecuta `/explorar`. Trabaja en solo lectura y con contexto propio, así la lectura masiva de archivos no satura la conversación principal.
+
+Su objetivo es que **ninguna relación del código quede sin revisar**. Para eso no explora libremente: recorre un método fijo y deja constancia de cada paso.
+
+1. **Puntos de entrada:** identifica los símbolos, archivos, rutas o tablas que nombra el pedido.
+2. **Dependencias hacia afuera:** qué usa cada punto de entrada (imports, llamadas, servicios externos).
+3. **Dependencias hacia adentro:** quién usa cada punto de entrada (búsqueda de todas las referencias, no solo de los imports directos).
+4. **Referencias indirectas:** usos por texto que un análisis de imports no detecta: nombres en configuración, rutas HTTP, nombres de eventos o colas, claves de caché, cadenas en plantillas, inyección de dependencias.
+5. **Datos:** modelos, esquemas, migraciones y contratos de API afectados.
+6. **Tests y documentación:** tests que cubren lo afectado y documentos que lo describen.
+7. **Iteración:** cada archivo nuevo encontrado vuelve a pasar por los pasos 2 a 6, hasta que no aparecen relaciones nuevas.
+
+El resultado es un **mapa de impacto** en `docs/exploraciones/`, a partir de `docs/templates/exploracion.md`. Cada categoría se marca siempre, aunque esté vacía ("revisado: ninguno"), para que una omisión sea visible y no se confunda con algo que no se buscó. El mapa alimenta la sección "Archivos permitidos" de la spec.
 
 ### Agente desarrollador
 
@@ -111,13 +137,14 @@ Sus reglas viven en `docs/estandares/desarrollo.md`, una única fuente que despu
 
 | Comando | Entrada | Resultado |
 |---------|---------|-----------|
-| `/spec <descripción>` | Descripción del cambio | Spec nueva en `docs/specs/` a partir de la plantilla |
+| `/explorar <descripción>` | Descripción del cambio | Mapa de impacto en `docs/exploraciones/` |
+| `/spec <exploración>` | Ruta o ID del mapa de impacto | Spec nueva en `docs/specs/` a partir de la plantilla y del mapa |
 | `/implementar <spec>` | Ruta o ID de la spec | Tests y código que cumplen la spec, siguiendo TDD |
 | `/verificar <spec>` | Ruta o ID de la spec | Reporte criterio por criterio: cumple / no cumple, con evidencia |
 
 ### Fuera de alcance en v0.1
 
-- Orquestador y subagentes adicionales al desarrollador
+- Orquestador y subagentes adicionales al explorador y al desarrollador
 - Memoria persistente (engram)
 - Índice de specs y estados
 - Validadores de CI
@@ -153,7 +180,7 @@ Fuentes: [OpenCode Agents](https://opencode.ai/docs/agents/), [Claude Code Subag
 - Las skills en `.claude/skills/<nombre>/SKILL.md`: OpenCode también las lee, aunque como conocimiento que el modelo carga bajo demanda, no como comandos `/`.
 
 **¿Qué hay que duplicar?**
-- **El agente desarrollador:** los formatos de frontmatter son incompatibles. Ambos archivos deben ser cortos y remitir a `AGENTS.md` y a la skill.
+- **Los agentes explorador y desarrollador:** los formatos de frontmatter son incompatibles. Ambos archivos deben ser cortos y remitir a `AGENTS.md` y a la skill.
 - **Los comandos:** OpenCode no documenta que lea `.claude/commands/`, y la forma de forzar el agente es distinta. Cada comando es un envoltorio de pocas líneas que invoca la skill correspondiente.
 - **La referencia a los estándares:** `@` en `CLAUDE.md` para Claude Code y `instructions` en `opencode.json` para OpenCode.
 
