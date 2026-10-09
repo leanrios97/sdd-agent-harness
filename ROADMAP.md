@@ -44,16 +44,27 @@ en docs/specs/          TDD estricto +                criterio de
 
 ```
 sdd-agent-harness/
-├── AGENTS.md                   # Contrato único con las reglas de trabajo
-├── CLAUDE.md                   # Adaptador de Claude Code (referencia a AGENTS.md)
-├── .claude/agents/
-│   └── desarrollador.md        # Agente desarrollador para Claude Code
-├── .claude/commands/
-│   ├── spec.md
-│   ├── implementar.md
-│   └── verificar.md
-├── .opencode/                  # Agente y comandos equivalentes para OpenCode
-│   └── ...                     # Ubicación y formato a confirmar (ver Preguntas abiertas)
+├── AGENTS.md                   # Contrato único con las reglas de trabajo (fuente única)
+├── CLAUDE.md                   # Solo importa: @AGENTS.md y @docs/estandares/desarrollo.md
+├── opencode.json               # "instructions": ["docs/estandares/desarrollo.md"]
+├── .claude/
+│   ├── skills/                 # Lógica de cada fase, compartida por ambas herramientas
+│   │   ├── sdd-spec/SKILL.md
+│   │   ├── sdd-implementar/SKILL.md
+│   │   └── sdd-verificar/SKILL.md
+│   ├── agents/
+│   │   └── desarrollador.md    # Agente desarrollador (formato Claude Code)
+│   └── commands/               # Envoltorios finos que invocan cada skill
+│       ├── spec.md
+│       ├── implementar.md      # context: fork + agent: desarrollador
+│       └── verificar.md
+├── .opencode/
+│   ├── agents/
+│   │   └── desarrollador.md    # Agente desarrollador (formato OpenCode, mode: subagent)
+│   └── commands/               # Envoltorios finos que invocan cada skill
+│       ├── spec.md
+│       ├── implementar.md      # agent: desarrollador + subtask: true
+│       └── verificar.md
 └── docs/
     ├── estandares/
     │   └── desarrollo.md       # Buenas prácticas que aplica el agente desarrollador
@@ -74,7 +85,7 @@ Reglas mínimas que valen para los dos agentes:
 
 ### Agente desarrollador
 
-Es quien ejecuta `/implementar`. No agrega un paso extra al flujo: reemplaza al agente principal durante la implementación, con contexto limpio y reglas de desarrollo propias.
+Es quien ejecuta `/implementar`. No agrega un paso extra al flujo: reemplaza al agente principal durante la implementación, con contexto limpio y reglas de desarrollo propias. Como no ve el historial de la conversación, la spec es su única fuente de verdad.
 
 Sus reglas viven en `docs/estandares/desarrollo.md`, una única fuente que después reutilizan `/verificar` y las revisiones de versiones futuras:
 
@@ -113,17 +124,44 @@ Sus reglas viven en `docs/estandares/desarrollo.md`, una única fuente que despu
 - Lentes de revisión
 - Métricas
 
-### Preguntas abiertas
+### Compatibilidad entre Claude Code y OpenCode
 
-- [ ] ¿Cómo carga OpenCode `AGENTS.md` y qué orden de precedencia tiene frente a otros archivos de instrucciones?
-- [ ] ¿Dónde y en qué formato espera OpenCode los comandos personalizados?
-- [ ] ¿Cómo se define un agente en OpenCode y cómo se invoca desde un comando, de forma equivalente a `.claude/agents/` en Claude Code?
-- [ ] ¿Cuál es la forma recomendada en Claude Code para que `CLAUDE.md` reutilice `AGENTS.md` sin duplicar contenido?
-- [ ] ¿Se puede escribir cada comando una sola vez y compartirlo entre las dos herramientas, o hace falta un archivo por herramienta?
+Respuestas obtenidas de la documentación oficial de cada herramienta.
+
+**¿Cómo carga OpenCode `AGENTS.md`?**
+Lee `AGENTS.md` de la raíz del proyecto (y el global en `~/.config/opencode/`). Usa `CLAUDE.md` solo como respaldo si no existe `AGENTS.md`. No interpreta referencias `@archivo` dentro de `AGENTS.md`; los archivos extra se suman con el campo `instructions` de `opencode.json`.
+Fuentes: [Rules](https://opencode.ai/docs/rules/), [Config](https://opencode.ai/docs/config/)
+
+**¿Cómo reutiliza Claude Code `AGENTS.md`?**
+La forma recomendada es un `CLAUDE.md` que importe `@AGENTS.md`. Las versiones recientes leen `AGENTS.md` solas, pero solo si no hay `CLAUDE.md` y no en todos los casos, así que el import es más robusto. En Windows se recomienda el import en lugar de un enlace simbólico. Los imports admiten hasta 4 niveles de anidamiento.
+Fuente: [Memory](https://code.claude.com/docs/en/memory)
+
+**¿Cómo se definen los comandos?**
+- OpenCode: Markdown en `.opencode/commands/`, con `description`, `agent`, `model` y `subtask` en el frontmatter.
+- Claude Code: los comandos se unificaron con las skills. `.claude/commands/x.md` y `.claude/skills/x/SKILL.md` crean el mismo `/x`.
+
+Fuentes: [OpenCode Commands](https://opencode.ai/docs/commands/), [Claude Code Skills](https://code.claude.com/docs/en/skills)
+
+**¿Cómo se define el agente desarrollador y cómo se invoca desde un comando?**
+- OpenCode: `.opencode/agents/desarrollador.md` con `mode: subagent` y `permission`; el comando lo fuerza con `agent` + `subtask: true`.
+- Claude Code: `.claude/agents/desarrollador.md` con `name`, `description`, `tools` y `model`; el comando lo fuerza con `context: fork` + `agent`. El subagente no ve el historial de la conversación, así que la spec debe pasarse completa.
+
+Fuentes: [OpenCode Agents](https://opencode.ai/docs/agents/), [Claude Code Subagents](https://code.claude.com/docs/en/sub-agents)
+
+**¿Qué se puede escribir una sola vez?**
+- `AGENTS.md` (lo leen ambas herramientas).
+- Las skills en `.claude/skills/<nombre>/SKILL.md`: OpenCode también las lee, aunque como conocimiento que el modelo carga bajo demanda, no como comandos `/`.
+
+**¿Qué hay que duplicar?**
+- **El agente desarrollador:** los formatos de frontmatter son incompatibles. Ambos archivos deben ser cortos y remitir a `AGENTS.md` y a la skill.
+- **Los comandos:** OpenCode no documenta que lea `.claude/commands/`, y la forma de forzar el agente es distinta. Cada comando es un envoltorio de pocas líneas que invoca la skill correspondiente.
+- **La referencia a los estándares:** `@` en `CLAUDE.md` para Claude Code y `instructions` en `opencode.json` para OpenCode.
+
+**Regla de argumentos:** usar solo `$ARGUMENTS`, nunca posicionales. Claude Code numera desde `$0` y OpenCode desde `$1`.
 
 ### Criterio de terminado
 
-- [ ] Las preguntas abiertas tienen respuesta documentada
+- [x] Las preguntas de compatibilidad tienen respuesta documentada
 - [ ] Los entregables existen y funcionan en Claude Code y en OpenCode
 - [ ] Se completó al menos una spec real de punta a punta con el flujo
 - [ ] README actualizado con instrucciones de uso
