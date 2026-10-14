@@ -16,7 +16,7 @@ Cada versión tiene que poder usarse de punta a punta antes de pasar a la siguie
 
 | Versión | Objetivo | Estado |
 |---------|----------|--------|
-| v0.1 | Núcleo mínimo: contrato, plantilla de spec, flujo guiado y agente desarrollador | 🟨 En diseño |
+| v0.1 | Núcleo mínimo: contrato, plantilla de spec, flujo guiado y agentes explorador y desarrollador | 🟨 Validada en Claude Code; OpenCode pendiente |
 | v0.2 | Memoria y estado: engram, índice de specs, ciclo de vida | ⬜ |
 | v0.3 | Roles y controles: subagentes solo donde aporten, revisión antes de integrar, control de alcance | ⬜ |
 | v0.4 | Calidad automatizada: validadores de CI, lentes de revisión, vía rápida | ⬜ |
@@ -189,6 +189,28 @@ Fuentes: [OpenCode Agents](https://opencode.ai/docs/agents/), [Claude Code Subag
 ### Criterio de terminado
 
 - [x] Las preguntas de compatibilidad tienen respuesta documentada
-- [ ] Los entregables existen y funcionan en Claude Code y en OpenCode
-- [ ] Se completó al menos una spec real de punta a punta con el flujo
-- [ ] README actualizado con instrucciones de uso
+- [x] Los entregables existen y funcionan en Claude Code
+- [ ] Los entregables funcionan en OpenCode (archivos creados, sin validar en una sesión real)
+- [x] Se completó una spec real de punta a punta con el flujo (proyecto de prueba descartable)
+- [x] README actualizado con instrucciones de uso
+
+### Resultado de la validación en Claude Code
+
+Prueba sobre un proyecto descartable con trampas deliberadas. El flujo completo (`/explorar`, `/spec`, `/implementar`, `/verificar`) funcionó y detectó las cuatro:
+
+| Trampa | Resultado |
+|--------|-----------|
+| Referencia indirecta (nombre de función solo en un YAML, resuelto con importación dinámica) | Detectada por el explorador |
+| Mismo identificador con variantes de nombre (`user_id` y `userId`) | Detectada y planteada como duda |
+| Test que ya falla antes de empezar | Identificado como preexistente y no modificado |
+| Archivo que usa lo afectado pero no se ve impactado | Descartado y excluido de los archivos permitidos |
+
+### Mejoras pendientes
+
+Surgieron de la validación y no bloquean v0.1:
+
+- **Commit base en la spec.** Registrar el commit de partida al empezar a implementar para que `/verificar` compare contra él. Hoy depende de que los cambios estén sin commitear.
+- **Ejecución en primer plano.** Los comandos que corren en un subagente lo hacen en segundo plano por defecto; evaluar `background: false` para que el resultado se muestre al terminar.
+- **Instalador.** Incorporar el harness a un proyecto exige cinco pasos manuales (ver README). Automatizarlos con un script de bootstrap.
+- **Confirmación de la continuidad automática.** La regla de que la aprobación inicia el paso siguiente se agregó después de la prueba; falta comprobarla en una sesión nueva.
+- **Validación en OpenCode.** Probar la carga de `AGENTS.md` e `instructions`, los permisos por ruta del explorador y la ejecución de los comandos.
