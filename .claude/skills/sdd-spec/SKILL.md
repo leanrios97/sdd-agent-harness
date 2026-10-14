@@ -55,6 +55,11 @@ Si la spec supera **8 criterios** o **15 archivos permitidos**, detenerse y prop
 
 ## Cierre
 
-Responder con un resumen breve: cantidad de criterios por grupo, archivos permitidos, dudas que quedaron en "Notas" y la ruta de la spec. Después **detenerse y esperar aprobación**.
+Responder con un resumen breve: cantidad de criterios por grupo, archivos permitidos, dudas que quedaron en "Notas" y la ruta de la spec. Después **esperar la aprobación**.
 
-Cuando la persona aprueba, cambiar el estado a **Aprobada**. Recién entonces se puede usar `/implementar`.
+Cuando la persona aprueba:
+
+1. Cambiar el estado de la spec a **Aprobada**.
+2. **Continuar de inmediato** delegando en el agente `desarrollador` para ejecutar `sdd-implementar` con la ruta de la spec. No pedir otra confirmación ni esperar a que la persona escriba `/implementar`.
+
+Si en lugar de aprobar la persona pide cambios, ajustar la spec y volver a pedir aprobación.

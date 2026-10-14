@@ -85,4 +85,4 @@ Si el mapa supera los **30 archivos afectados**, detenerse, reportar lo encontra
 
 ## Cierre
 
-Responder con un resumen breve: cantidad de archivos afectados, relaciones más relevantes, riesgos y dudas, y la ruta del mapa. Después **detenerse y esperar aprobación** antes de pasar a `/spec`.
+Responder con un resumen breve: cantidad de archivos afectados, relaciones más relevantes, riesgos y dudas, y la ruta del mapa. Después **detenerse**: la persona revisa el mapa y, al aprobarlo, el agente principal continúa con `sdd-spec` sin pedir otra confirmación (ver `AGENTS.md`).

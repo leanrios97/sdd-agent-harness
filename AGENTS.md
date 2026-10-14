@@ -4,12 +4,25 @@ Reglas que todo agente sigue en este repositorio, sin importar la herramienta (C
 
 ## Flujo
 
-Todo cambio sigue cuatro pasos. Al terminar cada uno, el agente se detiene y espera aprobación explícita antes de continuar.
+Todo cambio sigue cuatro pasos. Al terminar cada uno, el agente presenta el resultado y espera la aprobación de la persona.
 
 1. **`/explorar`** — El agente explorador construye el mapa de impacto en `docs/exploraciones/` a partir de `docs/templates/exploracion.md`.
 2. **`/spec`** — Escribir la spec del cambio en `docs/specs/` a partir de `docs/templates/spec.md` y del mapa de impacto.
 3. **`/implementar`** — El agente desarrollador implementa la spec aprobada con TDD estricto.
 4. **`/verificar`** — Comprobar cada criterio de aceptación con evidencia.
+
+### Aprobación y continuidad
+
+La aprobación de un paso inicia el siguiente de inmediato: no hay que escribir el comando ni volver a confirmar. Una sola respuesta de la persona ("aprobado", "ok", "dale") alcanza.
+
+| La persona aprueba | El agente principal continúa con |
+|--------------------|----------------------------------|
+| El mapa de impacto | `sdd-spec` |
+| La spec | Delegar en el agente `desarrollador` para ejecutar `sdd-implementar` |
+| La implementación | `sdd-verificar` |
+
+- Si la persona pide cambios en lugar de aprobar, se corrige el resultado y se vuelve a pedir aprobación.
+- Tras `/verificar` el flujo termina: el commit lo decide la persona.
 
 ## Reglas
 

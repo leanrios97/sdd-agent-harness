@@ -75,4 +75,4 @@ Detenerse, no improvisar y reportar el motivo si:
    - resultado de la suite completa final, con las fallas preexistentes identificadas;
    - desvíos, dudas o deuda técnica detectada;
    - mensajes de commit sugeridos (conventional commits, en español).
-3. **Detenerse y esperar aprobación** antes de pasar a `/verificar`.
+3. **Detenerse**: la persona revisa el reporte y, al aprobarlo, el agente principal continúa con `sdd-verificar` sin pedir otra confirmación (ver `AGENTS.md`).
