@@ -13,6 +13,8 @@ Objetivo: convertir el pedido y el mapa de impacto en un contrato verificable. L
 - No inventar requisitos. Si algo no está claro, preguntar.
 - No incluir decisiones de implementación (clases, patrones, librerías) en los criterios.
 - Cada criterio tiene que poder convertirse en un test.
+- Cada cambio de estado actualiza la fila de la spec en `docs/specs/STATUS.md`.
+- Si la spec ya estaba Aprobada o más avanzada y cambia, vuelve a **Borrador** y requiere una nueva aprobación.
 
 ## Paso 1 — Leer
 
@@ -31,7 +33,7 @@ Si hay bloqueantes, **preguntarlas todas juntas, numeradas, antes de escribir la
 
 ## Paso 3 — Escribir la spec
 
-1. Usar el mismo ID y slug que la exploración: `docs/specs/<ID>-<slug>.md`, con estado **Borrador**.
+1. Usar el mismo ID y slug que la exploración: `docs/specs/<ID>-<slug>.md`, con estado **Borrador**. Registrar la spec en `docs/specs/STATUS.md`; si el índice no existe, crearlo a partir de `docs/templates/status.md`.
 2. **Objetivo:** una o dos oraciones. Agregar la **historia** solo si hay un actor real; en cambios técnicos (refactor, infraestructura, performance) se omite.
 3. **Alcance:** "Incluye" y un "No incluye" explícito con lo que podría asumirse y queda afuera.
 4. **Criterios de aceptación**, en tres grupos:
@@ -59,7 +61,7 @@ Responder con un resumen breve: cantidad de criterios por grupo, archivos permit
 
 Cuando la persona aprueba:
 
-1. Cambiar el estado de la spec a **Aprobada**.
+1. Cambiar el estado de la spec a **Aprobada** y actualizar su fila en `docs/specs/STATUS.md`.
 2. **Continuar de inmediato** delegando en el agente `desarrollador` para ejecutar `sdd-implementar` con la ruta de la spec. No pedir otra confirmación ni esperar a que la persona escriba `/implementar`.
 
 Si en lugar de aprobar la persona pide cambios, ajustar la spec y volver a pedir aprobación.

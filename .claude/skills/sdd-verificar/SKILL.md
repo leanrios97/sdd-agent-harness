@@ -10,7 +10,7 @@ Objetivo: comprobar de forma independiente que lo implementado cumple la spec. E
 ## Reglas
 
 - Solo lectura sobre el código y los tests. No se corrige nada en este paso: se reporta.
-- Las únicas escrituras permitidas son el reporte de verificación y el cambio de estado de la spec.
+- Las únicas escrituras permitidas son el reporte de verificación, el cambio de estado de la spec y su fila en `docs/specs/STATUS.md`.
 - Cada veredicto lleva evidencia concreta (`ruta:línea`, salida de un comando). Sin evidencia, el veredicto es "no verificado".
 - No se asume que un test prueba lo que dice su nombre: se lee.
 
@@ -19,11 +19,11 @@ Objetivo: comprobar de forma independiente que lo implementado cumple la spec. E
 1. La spec indicada en `docs/specs/`. Si su estado no es **Implementada**, detenerse y reportarlo.
 2. `docs/estandares/desarrollo.md`.
 3. El mapa de impacto que la spec enlaza.
-4. El diff de los cambios (`git status` y `git diff`).
+4. El diff de los cambios contra el **commit base** de la spec: `git diff <commit base>` más `git status` para los archivos sin seguimiento. Si la spec no registra commit base, usar `git status` y `git diff`.
 
 ## Paso 2 — Alcance
 
-Comparar los archivos modificados con "Archivos permitidos":
+Comparar los archivos modificados con "Archivos permitidos". Quedan fuera de este control los archivos del propio flujo: la spec, su mapa de impacto, su reporte de verificación y `docs/specs/STATUS.md`.
 
 - Archivo modificado que no está permitido → **hallazgo bloqueante**.
 - Archivo permitido que no se tocó → anotarlo y verificar que ningún criterio dependía de él.
@@ -79,6 +79,6 @@ Escribir `docs/verificaciones/<ID>-<slug>.md` con:
 
 ## Cierre
 
-- Si el veredicto es **Aprobada** o **Con observaciones**, cambiar el estado de la spec a **Verificada**.
+- Si el veredicto es **Aprobada** o **Con observaciones**, cambiar el estado de la spec a **Verificada** y actualizar su fila en `docs/specs/STATUS.md`, enlazando el reporte de verificación.
 - Si es **Rechazada**, dejar el estado en **Implementada** y listar qué debe corregir `/implementar`.
 - Responder con un resumen breve y la ruta del reporte, y **detenerse**. El commit lo decide la persona.

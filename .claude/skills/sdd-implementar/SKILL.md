@@ -12,7 +12,7 @@ Este paso corre en un contexto aislado: **no hay historial de conversación**. T
 ## Reglas
 
 - La spec es la única fuente de verdad. Lo que no está en la spec no se implementa.
-- Solo se crean o modifican los archivos de "Archivos permitidos". El único archivo extra que se puede tocar es la propia spec, y solo para cambiar su estado.
+- Solo se crean o modifican los archivos de "Archivos permitidos". Los únicos archivos extra que se pueden tocar son la propia spec (su estado y su commit base) y su fila en `docs/specs/STATUS.md`.
 - No se hacen commits: la persona decide cuándo commitear después de verificar.
 - Nunca se borra, se saltea ni se debilita un test para que pase.
 
@@ -27,6 +27,7 @@ Este paso corre en un contexto aislado: **no hay historial de conversación**. T
 
 1. Identificar el comando de tests del proyecto a partir de su configuración (`pyproject.toml`, `package.json`, `Makefile` u otra), y la forma de correr un subconjunto (por archivo, por nombre o por marcador). Si no se puede determinar, detenerse y reportarlo.
 2. **Durante el desarrollo se corren solo los tests de la spec**, no la suite completa. La suite completa se corre una sola vez, antes de cerrar (paso 4).
+3. **Registrar el commit base:** obtener el commit actual (`git rev-parse HEAD`) y completarlo en el campo "Commit base" de la spec. `/verificar` compara los cambios contra ese commit.
 
 ## Paso 3 — Ciclo TDD por criterio
 
@@ -68,7 +69,7 @@ Detenerse, no improvisar y reportar el motivo si:
 
 ## Cierre
 
-1. Cambiar el estado de la spec a **Implementada**.
+1. Cambiar el estado de la spec a **Implementada** y actualizar su fila en `docs/specs/STATUS.md`.
 2. Responder con un reporte breve:
    - tabla `criterio → test(s) → resultado`;
    - archivos creados y modificados;
