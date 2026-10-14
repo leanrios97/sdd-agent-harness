@@ -24,6 +24,26 @@ La aprobación de un paso inicia el siguiente de inmediato: no hay que escribir 
 - Si la persona pide cambios en lugar de aprobar, se corrige el resultado y se vuelve a pedir aprobación.
 - Tras `/verificar` el flujo termina: el commit lo decide la persona.
 
+### Ciclo de vida de las specs
+
+| Estado | Se llega cuando | Lo cambia |
+|--------|-----------------|-----------|
+| Borrador | Se escribe la spec | `/spec` |
+| Aprobada | La persona aprueba | Agente principal |
+| Implementada | La implementación termina | `/implementar` |
+| Verificada | La verificación da "Aprobada" o "Con observaciones" | `/verificar` |
+| Bloqueada | Falta una decisión para avanzar | Agente principal |
+| Descartada | La persona decide no continuar (solo desde Borrador o Aprobada) | Agente principal |
+
+- Una verificación "Rechazada" deja la spec en Implementada hasta que se corrija.
+- Una spec Bloqueada vuelve al estado anterior cuando la decisión se resuelve.
+- Si una spec Aprobada o más avanzada cambia, vuelve a Borrador y requiere una nueva aprobación.
+- No se permiten transiciones fuera de esta tabla.
+
+### Índice de specs
+
+`docs/specs/STATUS.md` lista todas las specs con su estado. Cada cambio de estado actualiza la fila correspondiente en el mismo paso, y `/estado` lo usa para informar dónde quedó el trabajo. Se crea a partir de `docs/templates/status.md` cuando se escribe la primera spec.
+
 ## Reglas
 
 ### Exploración

@@ -19,6 +19,8 @@ Harness reutilizable e independiente de la herramienta para desarrollo guiado po
 
 La persona aprueba el resultado de cada paso. **Una sola aprobación inicia el paso siguiente**, sin escribir otro comando.
 
+`/estado` informa en qué punto quedó el trabajo y cuál es el próximo paso, a partir del índice `docs/specs/STATUS.md`.
+
 ## Qué incluye
 
 ```
@@ -36,7 +38,7 @@ docs/
   estandares/desarrollo.md # POO, SOLID, patrones, arquitectura, KISS/YAGNI, TDD
   templates/               # Plantillas de exploración y de spec
   exploraciones/           # Mapas de impacto de cada cambio
-  specs/                   # Una spec por cambio
+  specs/                   # Una spec por cambio y su índice STATUS.md
   verificaciones/          # Reportes de verificación
   decisions/               # ADRs del harness
 ```

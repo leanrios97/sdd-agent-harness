@@ -1,8 +1,9 @@
 # <ID> — <Título del cambio>
 
-- **Estado:** Borrador | Aprobada | Implementada | Verificada
+- **Estado:** Borrador | Aprobada | Implementada | Verificada | Bloqueada | Descartada
 - **Fecha:** AAAA-MM-DD
 - **Exploración:** `docs/exploraciones/<ID>-<slug>.md`
+- **Commit base:** *(lo completa `/implementar` al empezar)*
 
 ## Objetivo
 
