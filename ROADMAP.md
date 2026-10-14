@@ -17,7 +17,7 @@ Cada versión tiene que poder usarse de punta a punta antes de pasar a la siguie
 | Versión | Objetivo | Estado |
 |---------|----------|--------|
 | v0.1 | Núcleo mínimo: contrato, plantilla de spec, flujo guiado y agentes explorador y desarrollador | 🟩 Validada en Claude Code y OpenCode |
-| v0.2 | Memoria y estado: engram, índice de specs, ciclo de vida | ⬜ |
+| v0.2 | Memoria y estado: engram, índice de specs, ciclo de vida | 🟨 En diseño |
 | v0.3 | Roles y controles: subagentes solo donde aporten, revisión antes de integrar, control de alcance | ⬜ |
 | v0.4 | Calidad automatizada: validadores de CI, lentes de revisión, vía rápida | ⬜ |
 | v0.5 | Métricas: tokens, costo, retrabajo y lead time por spec | ⬜ |
@@ -217,3 +217,112 @@ Surgieron de la validación y no bloquean v0.1:
 - **Ejecución en primer plano.** Los comandos que corren en un subagente lo hacen en segundo plano por defecto; evaluar `background: false` para que el resultado se muestre al terminar.
 - **Instalador.** Incorporar el harness a un proyecto exige cinco pasos manuales (ver README). Automatizarlos con un script de bootstrap.
 - **Permisos de bash del desarrollador en OpenCode.** Con `"*": ask` pide confirmación por cada comando; evaluar permitir de forma explícita el comando de tests de cada proyecto.
+
+---
+
+## v0.2 — Memoria y estado
+
+### Objetivo
+
+Que el harness recuerde entre sesiones qué está en curso, qué se decidió y qué se descubrió, sin duplicar lo que ya vive en el repositorio.
+
+### Problema
+
+Hoy el estado de cada spec está solo en su propio encabezado y no hay una vista de conjunto. Al abrir una sesión nueva, el agente no sabe qué quedó en curso, qué decisiones se tomaron ni qué encontró el explorador en cambios anteriores.
+
+### Modo de trabajo
+
+Un único modo: **spec + memoria**. Las specs son la fuente de verdad y viven en el repositorio; la memoria (engram) es aditiva y guarda el conocimiento que sirve para otros cambios. No hay selección de modo al iniciar un proyecto. Una línea en `AGENTS.md` (`Memoria: engram`) permite desactivarla.
+
+### Piezas
+
+| # | Pieza | Descripción | Problema que resuelve |
+|---|-------|-------------|------------------------|
+| 1 | Índice `docs/specs/STATUS.md` | Tabla con una fila por spec: ID, título, estado, enlaces a su exploración y verificación, fecha. Las skills la actualizan en cada transición | No hay vista de conjunto |
+| 2 | Ciclo de vida formal | Estados y transiciones válidas, definidos en `AGENTS.md` | Los estados son texto libre y se pueden saltear |
+| 3 | Commit base en la spec | Al empezar a implementar se registra el commit de partida; `/verificar` compara contra él | El diff queda vacío si se commitea a mitad de camino |
+| 4 | Comando `/estado` | Lee el índice e informa qué está en curso y cuál es el próximo paso | Retomar el trabajo en una sesión nueva |
+| 5 | Memoria con engram | Guarda decisiones, hallazgos y desvíos entre sesiones | El conocimiento de un cambio se pierde para el siguiente |
+
+### Ciclo de vida de una spec
+
+| Estado | Se llega cuando | Quién lo cambia |
+|--------|-----------------|-----------------|
+| Borrador | Se escribe la spec | `/spec` |
+| Aprobada | La persona aprueba | Agente principal |
+| Implementada | La implementación termina | `/implementar` |
+| Verificada | La verificación da "Aprobada" o "Con observaciones" | `/verificar` |
+| Bloqueada | Falta una decisión para avanzar; vuelve al estado anterior al resolverse | Agente principal |
+| Descartada | La persona decide no continuar (solo desde Borrador o Aprobada) | Agente principal |
+
+- Una verificación "Rechazada" deja la spec en Implementada hasta que se corrija.
+- Si una spec aprobada cambia, vuelve a Borrador, requiere una nueva aprobación y el motivo se registra en memoria.
+
+### Memoria
+
+**Qué va en cada lugar**
+
+| Dónde | Qué guarda | Por qué |
+|-------|------------|---------|
+| Archivos del repositorio | Specs, mapas de impacto, verificaciones y estado | Fuente de verdad, versionada y visible |
+| Engram | Decisiones transversales, hallazgos sobre la arquitectura, gotchas y desvíos | Conocimiento que sirve para *otros* cambios |
+
+**Qué se guarda**
+
+| Momento | Contenido |
+|---------|-----------|
+| Se aprueba una spec | La decisión y su motivo, incluidas las dudas bloqueantes y cómo se resolvieron |
+| Una spec aprobada cambia | Qué cambió y por qué; actualiza el mismo registro |
+| El explorador encuentra algo no obvio | El hallazgo y dónde está |
+| La verificación da observaciones o rechaza | Qué falló y la causa |
+| Hay un desvío o se frena una implementación | Qué faltaba en la spec |
+
+No se guarda: avance rutinario, contenido de archivos ni nada que pueda leerse en el repositorio o en git.
+
+**Cómo funciona**
+
+- **Punto de guardado:** la aprobación de la persona. Los subagentes tienen una lista cerrada de herramientas y no ven la conversación, así que quien escribe en memoria es el agente principal, antes de iniciar el paso siguiente.
+- **Clave estable por spec** (`<proyecto>/spec/<ID>`): un cambio posterior actualiza el registro en lugar de duplicarlo.
+- **Lectura:** antes de explorar, el agente principal consulta la memoria y pasa al explorador lo relevante (a confirmar según lo que permita cada herramienta).
+
+### Entregables
+
+```
+docs/specs/STATUS.md                      # Índice de specs
+.claude/skills/sdd-estado/SKILL.md        # Lógica de /estado, compartida
+.claude/commands/estado.md
+.opencode/commands/estado.md
+AGENTS.md                                 # + ciclo de vida, + memoria
+docs/templates/spec.md                    # + campo "Commit base"
+.claude/skills/sdd-*/SKILL.md             # actualizadas: índice, commit base y puntos de guardado
+```
+
+### Orden de trabajo
+
+1. Índice, ciclo de vida y commit base (sin dependencias externas).
+2. Comando `/estado`.
+3. Memoria con engram, al final porque requiere investigar la integración en cada herramienta.
+
+### Fuera de alcance
+
+- Subagentes adicionales y orquestador (v0.3).
+- Validadores de CI y lentes de revisión (v0.4).
+- Métricas (v0.5).
+
+### Preguntas abiertas
+
+- [ ] ¿Cómo se llaman y se invocan las herramientas de engram en Claude Code y en OpenCode? El prefijo varía según la instalación y puede romper listas de herramientas permitidas.
+- [ ] ¿Pueden los subagentes usar herramientas MCP, o debe consultar la memoria siempre el agente principal?
+- [ ] ¿Cómo se pasa el contexto de memoria al explorador cuando el comando corre en un subagente?
+
+### Riesgos
+
+- **Desincronización:** si una spec se edita a mano, el índice queda desactualizado. El validador de v0.4 lo cubre; hasta entonces depende de la disciplina.
+- **Ruido en memoria:** guardar de más hace que deje de servir. Por eso los disparadores son una lista cerrada.
+
+### Criterio de terminado
+
+- [ ] Cerrar una sesión, abrir otra y que `/estado` informe exactamente dónde quedó el trabajo
+- [ ] Una decisión tomada en una spec aparece como contexto al explorar un cambio relacionado
+- [ ] El ciclo de vida se respeta en las skills: ninguna transición fuera de la tabla
+- [ ] Validado en Claude Code y en OpenCode
