@@ -309,11 +309,47 @@ docs/templates/spec.md                    # + campo "Commit base"
 - Validadores de CI y lentes de revisión (v0.4).
 - Métricas (v0.5).
 
+### Investigación de engram
+
+Resultados de la documentación del proyecto y de las herramientas, más una comprobación de conexión en una sesión real.
+
+**Nombres de las herramientas**
+
+| Instalación | Nombre en la herramienta |
+|-------------|--------------------------|
+| Claude Code, plugin con MCP empaquetado | `mcp__plugin_engram_engram__mem_save` |
+| Claude Code, servidor MCP independiente | `mcp__engram__mem_save` |
+| OpenCode | `engram_mem_save` |
+
+El prefijo depende de cómo se instaló, así que **el harness no debe fijar nombres de herramientas de engram en las definiciones de sus agentes**. Ver la decisión de abajo.
+
+**Subagentes y MCP**
+
+- En Claude Code, un subagente con `tools` omitido hereda todas las herramientas, incluidas las MCP. Con una lista explícita se admiten patrones por servidor (`mcp__<servidor>__*`).
+- En OpenCode, el bloque `permission` del agente admite patrones sobre el nombre de la herramienta (`engram_*`).
+
+**Proyecto, almacenamiento y upsert**
+
+- El proyecto se determina por: proyecto explícito, luego `--project` o la variable `ENGRAM_PROJECT`, luego el directorio de trabajo (repositorio git). Un archivo `.engram/config.json` en el repositorio fija el nombre.
+- Comprobado en vivo: desde una carpeta con varios repositorios, guardar falla con `ambiguous_project`. Dentro de un único repositorio, o con `.engram/config.json`, no debería ocurrir.
+- La base es una sola por máquina (`~/.engram/engram.db`) y el proyecto es un campo. Es probable que Claude Code y OpenCode la compartan, aunque la documentación no lo garantiza.
+- `topic_key` hace upsert: reutiliza el último registro con el mismo proyecto, ámbito y clave, e incrementa su revisión (según la documentación; sin comprobar en vivo).
+
+**Riesgos conocidos**
+
+- El hook previo a herramientas del plugin de Claude Code puede denegar escrituras si no hay una sesión registrada. Llamar al MCP directamente lo evita. Falta comprobar el comportamiento real.
+- `mem_update` exige indicar el proyecto esperado además del identificador.
+
+### Decisiones
+
+- **Los subagentes no usan engram.** Leer y escribir memoria es tarea del agente principal. Así las definiciones de los agentes no dependen del prefijo de las herramientas y el mismo contrato sirve en ambas herramientas.
+- **`/explorar` deja de ejecutarse como subagente directo.** El agente principal consulta la memoria y delega en el explorador pasando lo relevante en el pedido. Alternativa descartada: darle al explorador herramientas de lectura de engram, por la dependencia del prefijo.
+- **El instalador crea `.engram/config.json`** con el nombre del proyecto.
+
 ### Preguntas abiertas
 
-- [ ] ¿Cómo se llaman y se invocan las herramientas de engram en Claude Code y en OpenCode? El prefijo varía según la instalación y puede romper listas de herramientas permitidas.
-- [ ] ¿Pueden los subagentes usar herramientas MCP, o debe consultar la memoria siempre el agente principal?
-- [ ] ¿Cómo se pasa el contexto de memoria al explorador cuando el comando corre en un subagente?
+- [ ] Comprobar en vivo, dentro de un repositorio, el guardado, el upsert por `topic_key` y la ausencia de bloqueos por sesión no registrada, en Claude Code y en OpenCode.
+- [ ] Confirmar que ambas herramientas comparten la misma base en una máquina.
 
 ### Riesgos
 
