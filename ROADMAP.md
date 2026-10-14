@@ -17,8 +17,8 @@ Cada versión tiene que poder usarse de punta a punta antes de pasar a la siguie
 | Versión | Objetivo | Estado |
 |---------|----------|--------|
 | v0.1 | Núcleo mínimo: contrato, plantilla de spec, flujo guiado y agentes explorador y desarrollador | 🟩 Validada en Claude Code y OpenCode |
-| v0.2 | Memoria y estado: engram, índice de specs, ciclo de vida | 🟨 En diseño |
-| v0.3 | Roles y controles: subagentes solo donde aporten, revisión antes de integrar, control de alcance | ⬜ |
+| v0.2 | Memoria y estado: engram, índice de specs, ciclo de vida | 🟨 En curso: piezas 1 a 4 escritas, sin validar; memoria pendiente |
+| v0.3 | Roles y controles: arquitecto, tutor, subagentes solo donde aporten, revisión antes de integrar, control de alcance | ⬜ |
 | v0.4 | Calidad automatizada: validadores de CI, lentes de revisión, vía rápida | ⬜ |
 | v0.5 | Métricas: tokens, costo, retrabajo y lead time por spec | ⬜ |
 
@@ -361,4 +361,56 @@ El prefijo depende de cómo se instaló, así que **el harness no debe fijar nom
 - [ ] Cerrar una sesión, abrir otra y que `/estado` informe exactamente dónde quedó el trabajo
 - [ ] Una decisión tomada en una spec aparece como contexto al explorar un cambio relacionado
 - [ ] El ciclo de vida se respeta en las skills: ninguna transición fuera de la tabla
+- [ ] Validado en Claude Code y en OpenCode
+
+---
+
+## v0.3 — Roles y controles
+
+### Objetivo
+
+Sumar dos roles que mejoran la calidad del diseño y el aprendizaje de la persona, sin agregar pasos ni aprobaciones al flujo de todos los cambios.
+
+### Arquitecto
+
+Subagente de solo lectura que `/spec` consulta **únicamente cuando el cambio lo justifica**: toca el modelo de datos, los límites entre capas o una superficie expuesta. En cualquier otro caso la spec indica "Sin impacto arquitectónico".
+
+- **Sin comando ni artefacto nuevos.** El resultado queda en una sección "Diseño" de la propia spec, de modo que la persona aprueba una sola cosa.
+- **Contenido de la sección:** modelo de datos y migraciones (si corresponde), patrones y puertos a usar con su justificación, riesgos de seguridad que aplican al cambio (selectivos, no un checklist fijo) e invariantes arquitectónicas verificables.
+- **No redefine estándares:** aplica `docs/estandares/desarrollo.md` y respeta el patrón que el repositorio ya usa.
+- **Control en `/verificar`:** audita cada invariante de la sección "Diseño" y la reporta como un criterio más.
+- **Descartado del borrador original:** métricas numéricas de acoplamiento (no son medibles con las herramientas del harness) y un paso propio con aprobación aparte.
+
+### Tutor
+
+Skill y comando `/explicar`, fuera del flujo, solo a pedido. No modifica archivos.
+
+- `/explicar <spec>`: explica las decisiones de esa spec (patrones, trade-offs, alternativas) y las conecta con la teoría que las sustenta.
+- `/explicar <tema>`: tutoría libre sobre un concepto, aplicado al código del proyecto.
+- Cierra con una o dos preguntas para reforzar lo aprendido.
+- Responde en el chat; no genera archivos.
+
+### Entregables
+
+```
+.claude/agents/arquitecto.md              # subagente de solo lectura
+.opencode/agents/arquitecto.md
+.claude/skills/sdd-explicar/SKILL.md      # lógica del tutor, compartida
+.claude/commands/explicar.md
+.opencode/commands/explicar.md
+docs/templates/spec.md                    # + sección "Diseño"
+.claude/skills/sdd-spec/SKILL.md          # decide cuándo consultar al arquitecto
+.claude/skills/sdd-verificar/SKILL.md     # + auditoría de invariantes
+```
+
+### Pendiente de definir
+
+- Criterio exacto para decidir si un cambio requiere al arquitecto.
+- Resto de la versión (subagentes adicionales, revisión antes de integrar), a definir con el uso real de v0.2.
+
+### Criterio de terminado
+
+- [ ] Un cambio que toca el modelo de datos produce una sección "Diseño" y `/verificar` audita sus invariantes
+- [ ] Un cambio sin impacto arquitectónico no agrega pasos ni aprobaciones
+- [ ] `/explicar` responde sobre una spec y sobre un tema libre sin modificar archivos
 - [ ] Validado en Claude Code y en OpenCode
