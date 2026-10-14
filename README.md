@@ -2,7 +2,7 @@
 
 Harness reutilizable e independiente de la herramienta para desarrollo guiado por especificaciones (SDD) asistido por IA. Coordina agentes de programación en Claude Code y OpenCode mediante un contrato compartido, un pipeline de especificaciones con controles de calidad y puntos de revisión humana.
 
-> **Estado:** v0.1. Validado en Claude Code; la validación en OpenCode está pendiente. Ver [ROADMAP.md](ROADMAP.md).
+> **Estado:** v0.1, validada en Claude Code y OpenCode. Ver [ROADMAP.md](ROADMAP.md).
 
 ## Flujo
 

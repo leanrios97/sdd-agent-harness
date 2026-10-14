@@ -16,7 +16,7 @@ Cada versión tiene que poder usarse de punta a punta antes de pasar a la siguie
 
 | Versión | Objetivo | Estado |
 |---------|----------|--------|
-| v0.1 | Núcleo mínimo: contrato, plantilla de spec, flujo guiado y agentes explorador y desarrollador | 🟨 Validada en Claude Code; OpenCode pendiente |
+| v0.1 | Núcleo mínimo: contrato, plantilla de spec, flujo guiado y agentes explorador y desarrollador | 🟩 Validada en Claude Code y OpenCode |
 | v0.2 | Memoria y estado: engram, índice de specs, ciclo de vida | ⬜ |
 | v0.3 | Roles y controles: subagentes solo donde aporten, revisión antes de integrar, control de alcance | ⬜ |
 | v0.4 | Calidad automatizada: validadores de CI, lentes de revisión, vía rápida | ⬜ |
@@ -190,7 +190,7 @@ Fuentes: [OpenCode Agents](https://opencode.ai/docs/agents/), [Claude Code Subag
 
 - [x] Las preguntas de compatibilidad tienen respuesta documentada
 - [x] Los entregables existen y funcionan en Claude Code
-- [ ] Los entregables funcionan en OpenCode (archivos creados, sin validar en una sesión real)
+- [x] Los entregables funcionan en OpenCode
 - [x] Se completó una spec real de punta a punta con el flujo (proyecto de prueba descartable)
 - [x] README actualizado con instrucciones de uso
 
@@ -205,6 +205,10 @@ Prueba sobre un proyecto descartable con trampas deliberadas. El flujo completo 
 | Test que ya falla antes de empezar | Identificado como preexistente y no modificado |
 | Archivo que usa lo afectado pero no se ve impactado | Descartado y excluido de los archivos permitidos |
 
+### Resultado de la validación en OpenCode
+
+El mismo proyecto de prueba, restaurado a su estado inicial, se recorrió en una sesión real de OpenCode con el flujo completo, incluida la continuidad automática entre pasos. El flujo funcionó correctamente.
+
 ### Mejoras pendientes
 
 Surgieron de la validación y no bloquean v0.1:
@@ -212,5 +216,4 @@ Surgieron de la validación y no bloquean v0.1:
 - **Commit base en la spec.** Registrar el commit de partida al empezar a implementar para que `/verificar` compare contra él. Hoy depende de que los cambios estén sin commitear.
 - **Ejecución en primer plano.** Los comandos que corren en un subagente lo hacen en segundo plano por defecto; evaluar `background: false` para que el resultado se muestre al terminar.
 - **Instalador.** Incorporar el harness a un proyecto exige cinco pasos manuales (ver README). Automatizarlos con un script de bootstrap.
-- **Confirmación de la continuidad automática.** La regla de que la aprobación inicia el paso siguiente se agregó después de la prueba; falta comprobarla en una sesión nueva.
-- **Validación en OpenCode.** Probar la carga de `AGENTS.md` e `instructions`, los permisos por ruta del explorador y la ejecución de los comandos.
+- **Permisos de bash del desarrollador en OpenCode.** Con `"*": ask` pide confirmación por cada comando; evaluar permitir de forma explícita el comando de tests de cada proyecto.
