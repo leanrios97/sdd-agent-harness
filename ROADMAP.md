@@ -356,6 +356,29 @@ El prefijo depende de cómo se instaló, así que **el harness no debe fijar nom
 - **Desincronización:** si una spec se edita a mano, el índice queda desactualizado. El validador de v0.4 lo cubre; hasta entonces depende de la disciplina.
 - **Ruido en memoria:** guardar de más hace que deje de servir. Por eso los disparadores son una lista cerrada.
 
+### Resultado de la validación de las piezas 1 a 4
+
+Alcance: Claude Code. La validación en OpenCode queda diferida hasta cerrar la v0.2 en Claude Code.
+
+Camino feliz en un proyecto de prueba (cambio "desactivar usuarios", 8 criterios):
+
+- El índice `STATUS.md` se creó desde la plantilla y siguió los estados Borrador, Aprobada, Implementada y Verificada.
+- El commit base quedó registrado con el `HEAD` correcto.
+- `/estado` informó el próximo paso correcto en tres momentos: sin specs, con la spec Implementada y con la spec Verificada, sin inconsistencias.
+- El control de alcance de `/verificar` no marcó como no permitidos la spec, el mapa, el reporte ni el índice.
+- Se detectaron la falla preexistente y el archivo afectado que el pedido original no mencionaba.
+
+Observaciones:
+
+- La verificación se ejecutó en un subagente de propósito general y no en el agente principal, por una regla de delegación de la configuración global del usuario. El resultado fue correcto.
+- `/explorar` corrió en segundo plano (mejora pendiente `background: false`).
+
+Casos borde sin probar:
+
+- [ ] Inconsistencia: editar a mano el estado de una spec; `/estado` debe reportarla sin corregirla.
+- [ ] Spec aprobada que cambia: debe volver a Borrador y requerir nueva aprobación.
+- [ ] Verificación Rechazada: debe dejar la spec en Implementada.
+
 ### Criterio de terminado
 
 - [ ] Cerrar una sesión, abrir otra y que `/estado` informe exactamente dónde quedó el trabajo
